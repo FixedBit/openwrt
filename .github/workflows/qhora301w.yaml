@@ -1,32 +1,43 @@
-name: Build IPQ807x
+name: Build Qhora-301w Images
 on: [push]
 
 jobs:
     build:
-        name: Prepare and build IPQ807x generic images
+        name: Prepare and build Qhora-301w images
         runs-on: ubuntu-latest
 
         steps:
             - name: Checkout
               uses: actions/checkout@v2
 
+            - name: Download qhora301 files
+              run: |
+                wget https://github.com/FixedBit/qhora301w-files/releases/download/original/qhora301w-files.tar.gz
+                mkdir files
+                tar xvfz qhora301w-files.tar.gz -C ./files
+
             - name: Update and install feeds
               run: |
                 ./scripts/feeds update -a
                 ./scripts/feeds install -a
 
-            - name: Generate config for IPQ807x Generic
+            - name: Generate config for Qhora-301w
               run: |
                 echo "CONFIG_TARGET_ipq807x=y" > .config
                 echo "CONFIG_TARGET_ipq807x_generic=y\n" >> .config
-                echo "CONFIG_TARGET_MULTI_PROFILE=y\n" >> .config
-                echo "CONFIG_TARGET_ALL_PROFILES=y\n" >> .config
+                echo "CONFIG_TARGET_MULTI_PROFILE=n\n" >> .config
+                echo "CONFIG_TARGET_ALL_PROFILES=n\n" >> .config
+                echo "CONFIG_TARGET_ipq807x_generic_DEVICE_qnap_301w=y" >> .config
                 echo "CONFIG_TARGET_PER_DEVICE_ROOTFS=y\n" >> .config
                 echo "CONFIG_TARGET_ROOTFS_INITRAMFS=y\n" >> .config
                 echo "CONFIG_TARGET_INITRAMFS_COMPRESSION_ZSTD=y\n" >> .config
                 echo "CONFIG_PACKAGE_luci=y\n" >> .config
-                echo "CONFIG_PACKAGE_kmod-qca-nss-dp=y\n" >> .config
+                echo "CONFIG_PACKAGE_luci-ssl=y\n" >> .config
+                echo "CONFIG_PACKAGE_kmod-qca-nss-drv=y\n" >> .config
                 echo "CONFIG_PACKAGE_qca-ssdk-shell=y\n" >> .config
+                echo "CONFIG_PACKAGE_aq-fw-download=y\n" >> .config
+                echo "CONFIG_PACKAGE_nano=y\n" >> .config
+                echo "CONFIG_PACKAGE_luci-app-sqm=y\n" >> .config
                 make defconfig
 
             - name: Download package sources
@@ -48,13 +59,13 @@ jobs:
                 make V=s
 
             - name: TAR output
-              run: tar -cvf ipq807xx-images.tar bin/targets/ipq807x/generic
+              run: tar -cvf qhora301w-images.tar bin/targets/ipq807x/generic
 
             - name: Upload artifacts
               uses: actions/upload-artifact@v2
               with:
-                name: ipq807x-images
-                path: ipq807xx-images.tar
+                name: qhora301w-images
+                path: qhora301w-images.tar
 
     release:
           name: Make a release
@@ -65,10 +76,10 @@ jobs:
             - name: Download the image artifacts
               uses: actions/download-artifact@v2
               with:
-                name: ipq807x-images
+                name: qhora301w-images
 
             - name: Extract the image artifacts
-              run: tar xf ipq807xx-images.tar
+              run: tar xf qhora301w-images.tar
 
             - name: Get the current date
               run: echo "NOW=$(date +%F)" >> $GITHUB_ENV
@@ -78,6 +89,6 @@ jobs:
               with:
                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
                 prerelease: true
-                title: "Updated prebuilt images ${{ env.NOW }}"
-                automatic_release_tag: "ipq807x-${{ env.NOW }}"
+                title: "Updated Qhora-301w prebuilt images ${{ env.NOW }}"
+                automatic_release_tag: "ipq807x-qhora301w-${{ env.NOW }}"
                 files: bin/targets/ipq807x/generic/*
