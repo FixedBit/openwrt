@@ -1,9 +1,9 @@
-name: Build Qhora-301w Images
+name: Build QHora-301w Images
 on: [push]
 
 jobs:
     build:
-        name: Prepare and build Qhora-301w images
+        name: Prepare and build QHora-301w images
         runs-on: ubuntu-latest
 
         steps:
@@ -12,16 +12,16 @@ jobs:
 
             - name: Download qhora301 files
               run: |
-                wget https://github.com/FixedBit/qhora301w-files/releases/download/original/qhora301w-files.tar.gz
-                mkdir files
-                tar xvfz qhora301w-files.tar.gz -C ./files
+                wget https://github.com/FixedBit/qhora301w-files/blob/main/qhora301w-files.tar.gz?raw=true -O qhora301w-files.tar.gz
+                tar xvfz qhora301w-files.tar.gz
+                rm qhora301w-files.tar.gz
 
             - name: Update and install feeds
               run: |
                 ./scripts/feeds update -a
                 ./scripts/feeds install -a
 
-            - name: Generate config for Qhora-301w
+            - name: Generate config for QHora-301w
               run: |
                 echo "CONFIG_TARGET_ipq807x=y" > .config
                 echo "CONFIG_TARGET_ipq807x_generic=y\n" >> .config
@@ -89,6 +89,6 @@ jobs:
               with:
                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
                 prerelease: true
-                title: "Updated Qhora-301w prebuilt images ${{ env.NOW }}"
+                title: "Updated QHora-301w prebuilt images ${{ env.NOW }}"
                 automatic_release_tag: "ipq807x-qhora301w-${{ env.NOW }}"
                 files: bin/targets/ipq807x/generic/*
